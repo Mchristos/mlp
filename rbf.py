@@ -6,6 +6,9 @@ import json
 
 
 class RBF():
+    """
+    Implements Radial Basis Function (RBF) network. 
+    """
     def __init__(self, centers, activation = 'gaussian', sigma = 1, w = None):
         """
         centers = RBF centers
@@ -18,12 +21,10 @@ class RBF():
         if activation == 'gaussian':
             self.sigma = sigma 
         
-
-
     def train(self, X, y):
         """
-        Train RBF network on labelled data using given centers and activation function. 
-        Returns the weight vector for trained network. 
+        Train RBF network on labelled data.
+        Returns the weight vector for the trained network. 
         X = data 
         y = labels
         c = centres 
