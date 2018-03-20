@@ -13,10 +13,11 @@ def error(yp, y):
     """
     Compute error between predicted yp and actual y values. 
     """
-    return np.sqrt(sum((yp-y)**2)/len(y))    # print("predicting...")
+    print(yp.shape, y.shape)
+    # return 0.5*np.sum((yp - y)**2)
+    return np.sqrt(sum((yp-y)**2)/len(y)) 
 
-
-def train(X, y):
+def train_rbf(X, y):
     """ train rbf model, save model"""
     startTime = time.time()
     print("training...")
@@ -46,7 +47,7 @@ def train(X, y):
 
     print("took %0.3f seconds" % (time.time() - startTime))
 
-def predict(X):
+def predict_rbf(X):
     # load model 
     rbf = joblib.load('rbf.pkl')
     pca = joblib.load('pca.pkl')
@@ -59,7 +60,7 @@ def predict(X):
 def train_mlp(X, T):
     # hyperparameters 
     hiddenlayers = 5
-    n_pca_components = 10
+    n_pca_components = 5
     # pre-process (PCA)
     X = (X - np.mean(X))/np.std(X, axis=0)
     pca = PCA(n_components = n_pca_components)
@@ -67,21 +68,20 @@ def train_mlp(X, T):
     Xt = pca.transform(X)
     # train
     T = T.values.reshape(-1,1)
-    mlp = MLP(Xt.shape[1],hiddenlayers, T.shape[1], eta = 0.0001)
-    mlp.train_seq(Xt, T, 10, ploterror = True)
-    # mlp.train_batch(Xt, T, 10)
+    mlp = MLP(Xt.shape[1],hiddenlayers, T.shape[1], eta = 0.001)
+    # mlp.train_seq(Xt, T, 10, ploterror = True)
+    V, W = mlp.train_batch(Xt, T, 100)
+    print("V: \n %r" % V)
+    print("W: \n %r " % W)
+    return mlp
 
-
-
-
-if __name__ == '__main__':
+def trainandtestwheel():
     Nwheel = 3
     D = pd.read_csv('data178586.csv', header = None)
     N = D.shape[0]
     delta = int(N/Nwheel)
     X = D.loc[:,:9]
     y = D.loc[:,10]
-
     print("std in y %f" % np.std(y))
     for i in range(Nwheel):
         i1 = delta*i
@@ -90,11 +90,44 @@ if __name__ == '__main__':
         test = X[i1:i2]
         # train
         ytrain = pd.concat([y[:i1],y[i2:]])
-        train_mlp(training,ytrain)
-        break
-
+        mlp = train_mlp(training,ytrain)
         # test 
-        # yp = predict(test)
-        # print("average error: %0.3g" % error(yp, y[i1:i2]) )
+        # yp = mlp.predict(test).reshape(-1,1)
+        # print("average error: %0.3g" % error(yp, np.array(y[i1:i2]).reshape(-1,1) ) )
         # ypp = predict(training)
         # print("training error: %0.3g" % error(ypp, ytrain) )
+
+def basicMLP():
+    mlp = MLP(2, 2, 2, eta = 0.1, activation='linear')
+    X = np.array([[0,1.]])
+    T = np.array([[1.,0]])
+    V = np.array([[1,-2, 1], 
+                  [1, 0, 1]])
+    W = np.array([[1, 1, 1],
+                  [1,-1, 1]])
+    mlp.train_batch(X, T, 1000, ploterror=False, V = V, W = W)
+    t = mlp.predict(X)
+    print(t)
+
+def XOR():
+    mlp = MLP(2, 2, 1, eta = 0.01, activation = 'sigmoid')
+    X = np.array([[0, 0],
+                  [0, 1],
+                  [1, 0],
+                  [1, 1]])
+    T = np.array([[0],
+                  [0],
+                  [1],
+                  [1]])
+    V, W = mlp.train_batch(X, T, 2000, ploterror=True)
+    print(V)
+    print(W)
+    print("")
+    print(mlp.predict(X)) 
+
+
+
+
+
+if __name__ == '__main__':
+    XOR()
