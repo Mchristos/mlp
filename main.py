@@ -69,6 +69,7 @@ def train_mlp(X, T):
     T = T.values.reshape(-1,1)
     mlp = MLP(Xt.shape[1],hiddenlayers, T.shape[1], eta = 0.0001)
     mlp.train_seq(Xt, T, 10, ploterror = True)
+    # mlp.train_batch(Xt, T, 10)
 
 
 
