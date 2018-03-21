@@ -97,18 +97,6 @@ def trainandtestwheel():
         # ypp = predict(training)
         # print("training error: %0.3g" % error(ypp, ytrain) )
 
-def basicMLP():
-    mlp = MLP(2, 2, 2, eta = 0.1, activation='linear')
-    X = np.array([[0,1.]])
-    T = np.array([[1.,0]])
-    V = np.array([[1,-2, 1], 
-                  [1, 0, 1]])
-    W = np.array([[1, 1, 1],
-                  [1,-1, 1]])
-    mlp.train(X, T, 1000, ploterror=False, V = V, W = W)
-    t = mlp.predict(X)
-    print(t)
-
 def XOR():
     mlp = MLP(2, 5, 1, eta = 0.01, activation = 'sigmoid')
     X = np.array([[0, 0],
@@ -132,4 +120,4 @@ def XOR():
 
 
 if __name__ == '__main__':
-    XOR()
+    basicMLP()
