@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt 
 
 def SIG(x):
     """ sigmoid function """
@@ -36,7 +35,7 @@ class MLP():
             self.f = lambda x : x
             self.f_prime = lambda x : 1
 
-    def train_batch(self, X, T, iters, ploterror = False, V = None, W = None):
+    def train(self, X, T, iters, method = 'seq', V = None, W = None):
         X = addOnesCol(X)
         T = np.array(T)
         if X.shape[0] != T.shape[0]:
@@ -45,16 +44,17 @@ class MLP():
         if V is None:
             V = np.random.rand(self.dim_hidden, self.dim_in  + 1)
             W = np.random.rand(self.dim_out, self.dim_hidden + 1)
-        if ploterror:
-            error = np.zeros(iters)
+        # store error values 
+        self.error = np.zeros(iters)
         # update weights 
         for t in range(iters):
-            V, W, Y= self._batch_update(X, T, V, W)
-            if ploterror:
-                error[t] = self._error(Y, T)
-        if ploterror:
-            plt.plot(error)
-            plt.show()
+            if method == 'batch':
+                V, W, Y= self._batch_update(X, T, V, W)
+                self.error[t] = self._error(Y, T)
+            if method == 'seq':
+                for i in range(X.shape[0]):
+                    V, W = self._seq_update(X[i,:], T[i,:], V, W)
+                self.error[t] = self._error2(X, V, W, T)
         self.V = V
         self.W = W
         return V, W
@@ -63,45 +63,38 @@ class MLP():
         # forward pass 
         U = (V@X.T).T
         Z = addOnesCol(self.f(U))
-        A = (W@Z.T).T
+        A = (W@Z.T).Tp
         Y = self.f(A)
         # backward pass
         Delta = -self.f_prime(A)*(T - Y)
         delta =  self.f_prime(U)*(Delta@W)[:,1:]
-        #                                    ^ ignore first component of hidden layer
+        #                                    ^ ignore zeroth component of hidden layer
         # for each forward/backward pass 
         for i in range(Delta.shape[0]):
             W_ = W - self.eta * (Delta[i,:].reshape(-1,1) @ Z[i,:].reshape(1,-1))
             V_ = V - self.eta * (delta[i,:].reshape(-1,1) @ X[i,:].reshape(1,-1))
         return V_, W_, Y
 
-    def train_seq(self, X, T, iters, ploterror = False):
-        X = np.array(X)
-        T = np.array(T)
-        if X.shape[0] != T.shape[0]:
-            raise ValueError("incorrect shape")
-        if ploterror:
-            err = np.zeros(iters)
-        # initialize weights 
-        V = np.random.rand(self.dim_hidden, self.dim_in)
-        W = np.random.rand(self.dim_out, self.dim_hidden)
-        # update sequentially with backprop 
-        for t in range(iters):
-            for i in range(X.shape[0]):
-                V, W = self._sequential_update(X[i,:], T[i,:], V, W)
-            if ploterror:
-                err[t] = 0
-        # plot error 
-        if ploterror:
-            print(err)
-            plt.plot(err)
-            plt.show()
-        # set learned weights 
-        self.V = V
-        self.W = W
-        return V, W
-
+    def _seq_update(self, x, t, V, W):
+        # forward pass
+        u = V@x
+        z = self.f(u)
+        z = np.array([1.,*z]) # add one 
+        a = W@z
+        y = self.f(a)
+        # backward pass 
+        Delta = -self.f_prime(a)*(t - y) # row vector 
+        delta =  self.f_prime(u)*(Delta@W)[1:]
+        #                                  ^ ignore zeroth component 
+        # update weights 
+        V_ = V - self.eta * (delta.reshape(-1,1) @ x.reshape(1,-1))
+        W_ = W - self.eta * (Delta.reshape(-1,1) @ z.reshape(1,-1))
+        if(np.isnan(V_).any()) :
+            raise RuntimeError("nan values encountered")
+        return V_, W_
+    
     def predict(self, X):
+        """ predict using trained model """
         # forward pass 
         X = addOnesCol(X)
         U = (self.V@X.T).T
@@ -110,24 +103,17 @@ class MLP():
         Y = self.f(A)
         return Y 
 
-    def _sequential_update(self, x, t, V, W):
-        # forward pass
-        u = V@x
-        z = self.f(u)
-        a = W@z
-        y = self.f(a)
-        # backward pass 
-        Delta = -self.f_prime(a)*(t - y) # row vector 
-        delta = self.f_prime(u)*(Delta@W)
-        # update weights 
-        V_ = V - self.eta * (delta.reshape(-1,1) @ x.reshape(1,-1))
-        W_ = W - self.eta * (Delta.reshape(-1,1) @ z.reshape(1,-1))
-        if(np.isnan(V_).any()) :
-            raise RuntimeError("nan values encountered")
-        return V_, W_
-
     def _error(self, Y, T):
+        """ compute error """
         return 0.5*np.sum((Y - T)**2)/len(Y)
-    
+
+    def _error2(self, X, V, W, T):
+        """compute error given weights """
+        U = (V@X.T).T
+        Z = addOnesCol(self.f(U))
+        A = (W@Z.T).T
+        Y = self.f(A)
+        return self._error(Y, T)
+
     def __repr__(self):
         return "in:%i, hidden:%i out:%i " % (self.dim_in, self.dim_hidden, self.dim_out)

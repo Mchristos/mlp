@@ -105,25 +105,27 @@ def basicMLP():
                   [1, 0, 1]])
     W = np.array([[1, 1, 1],
                   [1,-1, 1]])
-    mlp.train_batch(X, T, 1000, ploterror=False, V = V, W = W)
+    mlp.train(X, T, 1000, ploterror=False, V = V, W = W)
     t = mlp.predict(X)
     print(t)
 
 def XOR():
-    mlp = MLP(2, 2, 1, eta = 0.01, activation = 'sigmoid')
+    mlp = MLP(2, 5, 1, eta = 0.01, activation = 'sigmoid')
     X = np.array([[0, 0],
                   [0, 1],
                   [1, 0],
                   [1, 1]])
     T = np.array([[0],
-                  [0],
                   [1],
-                  [1]])
-    V, W = mlp.train_batch(X, T, 2000, ploterror=True)
+                  [1],
+                  [0]])
+    V, W = mlp.train(X, T, 50000, method = 'seq')
+    plt.plot(mlp.error)
+    plt.show()
     print(V)
     print(W)
     print("")
-    print(mlp.predict(X)) 
+    print(mlp.predict(X))
 
 
 
