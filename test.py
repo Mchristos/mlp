@@ -2,6 +2,8 @@ import unittest
 import numpy as np 
 from mlp import MLP 
 import time 
+import matplotlib.pyplot as plt 
+
 
 threshold = 0.0000001 # small value for testing equality 
 
@@ -45,23 +47,18 @@ class TestMLP(unittest.TestCase):
     def test_linear(self):
         mlp = MLP(1, 5, 1, eta = 0.01, activation='linear')
         X = np.linspace(-1,1,10).reshape(-1,1)
-        T = np.linspace(6,9,10).reshape(-1,1)
-        mlp.train(X, T, 1000)
+        T = np.linspace(6,7,10).reshape(-1,1)
+        mlp.train(X, T, 1000, method='seq')        
         Tp = mlp.predict(X)
         self.assertTrue( np.all((Tp - T)<threshold) )
     
     def test_sin(self):
-        mlp = MLP(1, 5, 1, eta = 0.01, activation='sigmoid')
-        n = 100
+        mlp = MLP(1, 5, 1, eta = 0.1, activation='sigmoid')
+        n = 50
         X = np.random.rand(n).reshape(-1,1)
-        T = np.sin(np.pi*X) #+ np.random.normal(size = n, scale =  0.05).reshape(-1,1)
-        mlp.train(X, T, 1000)
-        Xp = np.random.rand(n).reshape(-1,1)
-        Tp = mlp.predict(Xp)
-        self.assertTrue(False)
-
-
-
+        T = np.sin(np.pi*X) + np.random.normal(size = n, scale =  0.05).reshape(-1,1)
+        mlp.train(X, T, 4000, method='seq')
+        self.assertTrue(mlp.error[-1] < 0.02)
 
 if __name__ == '__main__':
     unittest.main()     

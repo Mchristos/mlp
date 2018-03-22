@@ -63,7 +63,7 @@ class MLP():
         # forward pass 
         U = (V@X.T).T
         Z = addOnesCol(self.f(U))
-        A = (W@Z.T).Tp
+        A = (W@Z.T).T
         Y = self.f(A)
         # backward pass
         Delta = -self.f_prime(A)*(T - Y)
@@ -74,6 +74,27 @@ class MLP():
             W_ = W - self.eta * (Delta[i,:].reshape(-1,1) @ Z[i,:].reshape(1,-1))
             V_ = V - self.eta * (delta[i,:].reshape(-1,1) @ X[i,:].reshape(1,-1))
         return V_, W_, Y
+    
+    def _owen_batch_update(self, X, T, V, W):
+        # forward pass 
+        U = (V@X.T).T
+        Z = addOnesCol(self.f(U))
+        A = (W@Z.T).T
+        Y = self.f(A)
+        # backward pass
+        Delta = -self.f_prime(A)*(T - Y)
+        delta = self.f_prime(U)*(Delta@W)[:,1:]
+        #                                    ^ ignore zeroth component of hidden layer
+        Delta = np.mean(Delta, axis = 0)
+        delta = np.mean(delta, axis = 0)
+        # for each forward/backward pass 
+        # update weights 
+        x = np.mean(X, axis = 0)
+        z = np.mean(Z, axis = 0)
+        V_ = V - self.eta * (delta.reshape(-1,1) @ x.reshape(1,-1))
+        W_ = W - self.eta * (Delta.reshape(-1,1) @ z.reshape(1,-1))
+        return V_, W_, Y
+
 
     def _seq_update(self, x, t, V, W):
         # forward pass
