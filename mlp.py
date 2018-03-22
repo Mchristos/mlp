@@ -89,7 +89,7 @@ class MLP():
         # update weights 
         V_ = V - self.eta * (delta.reshape(-1,1) @ x.reshape(1,-1))
         W_ = W - self.eta * (Delta.reshape(-1,1) @ z.reshape(1,-1))
-        if(np.isnan(V_).any()) :
+        if(np.isnan(V_).any()):
             raise RuntimeError("nan values encountered")
         return V_, W_
     

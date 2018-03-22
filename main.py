@@ -11,11 +11,10 @@ import time
 
 def error(yp, y):
     """
-    Compute error between predicted yp and actual y values. 
+    Compute error between predicted yp and actual y values.
     """
-    print(yp.shape, y.shape)
     # return 0.5*np.sum((yp - y)**2)
-    return np.sqrt(sum((yp-y)**2)/len(y)) 
+    return np.sqrt(sum((yp-y)**2)/y.shape[0])
 
 def train_rbf(X, y):
     """ train rbf model, save model"""
@@ -59,21 +58,25 @@ def predict_rbf(X):
 
 def train_mlp(X, T):
     # hyperparameters 
-    hiddenlayers = 5
-    n_pca_components = 5
+    hiddenlayers = 10
+    n_pca_components = 10
+    eta = 0.001
+    iters = 100
     # pre-process (PCA)
-    X = (X - np.mean(X))/np.std(X, axis=0)
     pca = PCA(n_components = n_pca_components)
     pca.fit(X)
     Xt = pca.transform(X)
     # train
     T = T.values.reshape(-1,1)
-    mlp = MLP(Xt.shape[1],hiddenlayers, T.shape[1], eta = 0.001)
-    # mlp.train_seq(Xt, T, 10, ploterror = True)
-    V, W = mlp.train_batch(Xt, T, 100)
-    print("V: \n %r" % V)
-    print("W: \n %r " % W)
-    return mlp
+    mlp = MLP(Xt.shape[1],hiddenlayers, T.shape[1], eta = eta, activation='linear')
+    mlp.train(Xt, T, iters)
+    plt.plot(mlp.error)
+    plt.show()
+    # predict 
+    yp = mlp.predict(Xt)
+    plt.plot(yp)
+    # plt.plot(T)
+    plt.show()
 
 def trainandtestwheel():
     Nwheel = 3
@@ -81,6 +84,7 @@ def trainandtestwheel():
     N = D.shape[0]
     delta = int(N/Nwheel)
     X = D.loc[:,:9]
+    X = (X - X.mean())/X.std()
     y = D.loc[:,10]
     print("std in y %f" % np.std(y))
     for i in range(Nwheel):
@@ -90,34 +94,17 @@ def trainandtestwheel():
         test = X[i1:i2]
         # train
         ytrain = pd.concat([y[:i1],y[i2:]])
-        mlp = train_mlp(training,ytrain)
-        # test 
-        # yp = mlp.predict(test).reshape(-1,1)
-        # print("average error: %0.3g" % error(yp, np.array(y[i1:i2]).reshape(-1,1) ) )
-        # ypp = predict(training)
-        # print("training error: %0.3g" % error(ypp, ytrain) )
-
-def XOR():
-    mlp = MLP(2, 5, 1, eta = 0.01, activation = 'sigmoid')
-    X = np.array([[0, 0],
-                  [0, 1],
-                  [1, 0],
-                  [1, 1]])
-    T = np.array([[0],
-                  [1],
-                  [1],
-                  [0]])
-    V, W = mlp.train(X, T, 50000, method = 'seq')
-    plt.plot(mlp.error)
-    plt.show()
-    print(V)
-    print(W)
-    print("")
-    print(mlp.predict(X))
+        train_mlp(training,ytrain)
 
 
-
+def dothethings():
+    D = pd.read_csv('data178586.csv', header = None)
+    X = D.loc[:,:9]
+    X = (X - X.mean())/X.std()
+    y = D.loc[:,10]
+    train_mlp(X, y)
+    
 
 
 if __name__ == '__main__':
-    basicMLP()
+    dothethings()
