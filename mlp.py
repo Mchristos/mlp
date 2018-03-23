@@ -35,7 +35,7 @@ class MLP():
             self.f = lambda x : x
             self.f_prime = lambda x : 1
 
-    def train(self, X, T, iters, method = 'seq', V = None, W = None):
+    def train(self, X, T, epochs, method = 'batch', V = None, W = None):
         X = addOnesCol(X)
         T = np.array(T)
         if X.shape[0] != T.shape[0]:
@@ -45,9 +45,9 @@ class MLP():
             V = np.random.rand(self.dim_hidden, self.dim_in  + 1)
             W = np.random.rand(self.dim_out, self.dim_hidden + 1)
         # store error values 
-        self.error = np.zeros(iters)
+        self.error = np.zeros(epochs)
         # update weights 
-        for t in range(iters):
+        for t in range(epochs):
             if method == 'batch':
                 V, W, Y= self._batch_update(X, T, V, W)
                 self.error[t] = self._error(Y, T)
@@ -58,24 +58,8 @@ class MLP():
         self.V = V
         self.W = W
         return V, W
-
+   
     def _batch_update(self, X, T, V, W):
-        # forward pass 
-        U = (V@X.T).T
-        Z = addOnesCol(self.f(U))
-        A = (W@Z.T).T
-        Y = self.f(A)
-        # backward pass
-        Delta = -self.f_prime(A)*(T - Y)
-        delta =  self.f_prime(U)*(Delta@W)[:,1:]
-        #                                    ^ ignore zeroth component of hidden layer
-        # for each forward/backward pass 
-        for i in range(Delta.shape[0]):
-            W_ = W - self.eta * (Delta[i,:].reshape(-1,1) @ Z[i,:].reshape(1,-1))
-            V_ = V - self.eta * (delta[i,:].reshape(-1,1) @ X[i,:].reshape(1,-1))
-        return V_, W_, Y
-    
-    def _owen_batch_update(self, X, T, V, W):
         # forward pass 
         U = (V@X.T).T
         Z = addOnesCol(self.f(U))
@@ -85,14 +69,10 @@ class MLP():
         Delta = -self.f_prime(A)*(T - Y)
         delta = self.f_prime(U)*(Delta@W)[:,1:]
         #                                    ^ ignore zeroth component of hidden layer
-        Delta = np.mean(Delta, axis = 0)
-        delta = np.mean(delta, axis = 0)
         # for each forward/backward pass 
         # update weights 
-        x = np.mean(X, axis = 0)
-        z = np.mean(Z, axis = 0)
-        V_ = V - self.eta * (delta.reshape(-1,1) @ x.reshape(1,-1))
-        W_ = W - self.eta * (Delta.reshape(-1,1) @ z.reshape(1,-1))
+        V_ = V - self.eta * (delta.T @ X)
+        W_ = W - self.eta * (Delta.T @ Z)
         return V_, W_, Y
 
 
