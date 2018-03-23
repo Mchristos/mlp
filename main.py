@@ -55,29 +55,6 @@ def predict_rbf(X):
     Xt = pca.transform(X)
     return rbf.predict(Xt)
 
-
-def train_mlp(X, T):
-    # hyperparameters 
-    hiddenlayers = 10
-    n_pca_components = 10
-    eta = 0.001
-    iters = 100
-    # pre-process (PCA)
-    pca = PCA(n_components = n_pca_components)
-    pca.fit(X)
-    Xt = pca.transform(X)
-    # train
-    T = T.values.reshape(-1,1)
-    mlp = MLP(Xt.shape[1],hiddenlayers, T.shape[1], eta = eta, activation='linear')
-    mlp.train(Xt, T, iters)
-    plt.plot(mlp.error)
-    plt.show()
-    # predict 
-    yp = mlp.predict(Xt)
-    plt.plot(yp)
-    # plt.plot(T)
-    plt.show()
-
 def trainandtestwheel():
     Nwheel = 3
     D = pd.read_csv('data178586.csv', header = None)
@@ -94,16 +71,37 @@ def trainandtestwheel():
         test = X[i1:i2]
         # train
         ytrain = pd.concat([y[:i1],y[i2:]])
-        train_mlp(training,ytrain)
+        # train_mlp(training,ytrain)
 
 
 def dothethings():
     D = pd.read_csv('data178586.csv', header = None)
     X = D.loc[:,:9]
     X = (X - X.mean())/X.std()
+    print(X)
+
     y = D.loc[:,10]
-    train_mlp(X, y)
+    ymean = y.mean()
+    ystd = y.std()
+    yt = (y - ymean)/ystd
+
+    # hyperparameters 
+    hiddenlayers = 5
+    activation = 'sigmoid'
+    n_pca_components = 5
+    eta = 0.01
+    iters = 2000
+    # pre-process (PCA)
+    pca = PCA(n_components = n_pca_components)
+    pca.fit(X)
+    Xt = pca.transform(X)
+    # train
+    T = yt.values.reshape(-1,1)
+    mlp = MLP(Xt.shape[1],hiddenlayers, T.shape[1], eta = eta, activation=activation)
+    mlp.train(Xt, T, epochs=iters)
     
+    plt.plot(mlp.error)
+    plt.show()
 
 
 if __name__ == '__main__':
