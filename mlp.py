@@ -19,14 +19,13 @@ class MLP():
     """
     Implements multi-layer perceptron 
     """
-    def __init__(self, dim_in, dim_hidden, dim_out, eta, activation = 'sigmoid'):
+    def __init__(self, dims, eta, activation = 'sigmoid'):
         """
+        dims = [dim_in, dim_hidden1, ..., dim_hiddenN, dim_out]
         eta = leraning rate 
         activation = activation function
         """
-        self.dim_in = dim_in
-        self.dim_hidden = dim_hidden
-        self.dim_out = dim_out
+        self.dims = dims 
         self.eta = eta
         if activation == 'sigmoid':
             self.f = SIG
@@ -35,46 +34,70 @@ class MLP():
             self.f = lambda x : x
             self.f_prime = lambda x : 1
 
-    def train(self, X, T, epochs, method = 'batch', V = None, W = None):
-        X = addOnesCol(X)
+    def train(self, X, T, epochs, method = 'batch', weights = None):
         T = np.array(T)
         if X.shape[0] != T.shape[0]:
             raise ValueError("incorrect shape")
         # random initial weights
-        if V is None:
-            V = np.random.rand(self.dim_hidden, self.dim_in  + 1)
-            W = np.random.rand(self.dim_out, self.dim_hidden + 1)
+
+        if weights is None:
+            weights = []
+            for i in range(len(self.dims)-1):
+                w = np.random.rand(self.dims[i+1], self.dims[i] +1)
+                #                  ^ output dim    ^ input dim plus bias dim 
+                weights.append(w)
         # store error values 
         self.error = np.zeros(epochs)
         # update weights 
         for t in range(epochs):
             if method == 'batch':
-                V, W, Y= self._batch_update(X, T, V, W)
+                weights, Y= self._batch_update(X, T, weights)
                 self.error[t] = self._error(Y, T)
-            if method == 'seq':
-                for i in range(X.shape[0]):
-                    V, W = self._seq_update(X[i,:], T[i,:], V, W)
-                self.error[t] = self._error2(X, V, W, T)
-        self.V = V
-        self.W = W
-        return V, W
+            # if method == 'seq':
+                # for i in range(X.shape[0]):
+                #     V, W = self._seq_update(X[i,:], T[i,:], V, W)
+                # self.error[t] = self._error2(X, V, W, T)
+        self.weights = weights
+        return weights
    
-    def _batch_update(self, X, T, V, W):
-        # forward pass 
-        U = (V@X.T).T
-        Z = addOnesCol(self.f(U))
-        A = (W@Z.T).T
-        Y = self.f(A)
-        # backward pass
-        Delta = -self.f_prime(A)*(T - Y)
-        delta = self.f_prime(U)*(Delta@W)[:,1:]
-        #                                    ^ ignore zeroth component of hidden layer
-        # for each forward/backward pass 
-        # update weights 
-        V_ = V - self.eta * (delta.T @ X)
-        W_ = W - self.eta * (Delta.T @ Z)
-        return V_, W_, Y
+    def _batch_update(self, X, T, weights):
+        # forward pass
+        Y, x, u = self.forwardpass(X, weights)           
 
+        # backward pass
+        D = -self.f_prime(u[-1])*(T - Y) # Delta 
+        delta = [D]
+        for i in range(len(weights) -1):
+            W = weights[::-1][i]   # go through weight matrices in reverse
+            U = u[::-1][i+1] # go through outputs in reverse, from second last
+            d = self.f_prime(U)*(delta[i]@W)[:,1:]
+            delta.append(d)
+        delta.reverse() # reverse delta!  
+
+        # update weights 
+        weights_new = []
+        for i in range(len(weights)):
+            temp = self.eta*(delta[i].T @ x[i])
+            weights_new.append(weights[i] - temp)
+
+        return weights_new, Y
+
+    def forwardpass(self, X, weights):
+        """ perform forward pass, saving values"""
+        Y = X 
+        x = [] # inputs to next layer 
+        u = [] # activations  
+        for i in range(len(weights)):
+            X = addOnesCol(Y)
+            x.append(X)             # save input 
+            U = (weights[i]@X.T).T  # apply weight matrix
+            u.append(U)             # save output
+            Y = self.f(U)           # activated output  
+        return Y , x, u
+
+    def predict(self, X):
+        Y, _, __ = self.forwardpass(X, self.weights)
+        return Y 
 
     def _seq_update(self, x, t, V, W):
         # forward pass
@@ -94,15 +117,6 @@ class MLP():
             raise RuntimeError("nan values encountered")
         return V_, W_
     
-    def predict(self, X):
-        """ predict using trained model """
-        # forward pass 
-        X = addOnesCol(X)
-        U = (self.V@X.T).T
-        Z = addOnesCol(self.f(U))
-        A = (self.W@Z.T).T
-        Y = self.f(A)
-        return Y 
 
     def _error(self, Y, T):
         """ compute error """
