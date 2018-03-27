@@ -7,15 +7,13 @@ import json
 
 class RBF():
     """
-    Implements Radial Basis Function (RBF) network. 
+    Implements Radial Basis Function (RBF) network. systemD
     """
-    def __init__(self, centers, activation = 'gaussian', sigma = 1, w = None):
+    def __init__(self, centers, activation = 'gaussian', sigma = 1):
         """
         centers = RBF centers
         activation = RBF activation function (e.g. gaussian, linear)  
-        w = trained weights 
         """
-        self.w = None # learned weights 
         self.c = centers
         self.activation = activation
         if activation == 'gaussian':

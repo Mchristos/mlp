@@ -121,14 +121,6 @@ class MLP():
     def _error(self, Y, T):
         """ compute error """
         return 0.5*np.sum((Y - T)**2)/len(Y)
-
-    def _error2(self, X, V, W, T):
-        """compute error given weights """
-        U = (V@X.T).T
-        Z = addOnesCol(self.f(U))
-        A = (W@Z.T).T
-        Y = self.f(A)
-        return self._error(Y, T)
-
+        
     def __repr__(self):
-        return "in:%i, hidden:%i out:%i " % (self.dim_in, self.dim_hidden, self.dim_out)
+        return "in:%i, hidden:%i out:%i " % self.dims

@@ -1,11 +1,46 @@
 import unittest
 import numpy as np 
-from mlp import MLP 
+from mlp import MLP
+from rbf import RBF
+from sklearn.cluster import KMeans
 import time 
 import matplotlib.pyplot as plt 
 
 
 threshold = 0.0000001 # small value for testing equality 
+def RMSE(Y, T):
+    """ Root Mean Squared Error """
+    return np.sqrt(np.sum((Y - T)**2)/len(Y))
+
+class TestRBF(unittest.TestCase):
+    def setUp(self):
+        self.startTime = time.time()
+
+    def tearDown(self):
+        t = time.time() - self.startTime
+        print("%s: %.3f" % (self.id(), t))
+    
+    def test_sin(self):
+        n = 10000
+        X = np.random.rand(n).reshape(-1,1)
+        noise = 0.5
+        T = 0.5*np.sin(4*np.pi*X) + 0.5 + np.random.normal(size = n, scale = noise).reshape(-1,1)
+        n_centers = 20
+        kmeans = KMeans(n_clusters = n_centers)
+        kmeans.fit(X)
+        centers = kmeans.cluster_centers_        
+        rbf = RBF(centers, activation='gaussian', sigma = 0.05)
+        rbf.train(X,T)
+        Tp = rbf.predict(X)
+        error = RMSE(Tp, T)
+        # Xp = np.linspace(0,1,1000).reshape(-1,1)
+        # Tp = rbf.predict(Xp)
+        # plt.scatter(X,T)
+        # plt.plot(Xp,Tp, c = 'y')
+        # plt.show()
+        epsilon = 0.001
+        self.assertTrue(error < noise + epsilon)
+
 
 class TestMLP(unittest.TestCase):
     
