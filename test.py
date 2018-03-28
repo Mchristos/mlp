@@ -2,6 +2,7 @@ import unittest
 import numpy as np 
 from mlp import MLP
 from rbf import RBF
+from sklearn.decomposition import PCA 
 from sklearn.cluster import KMeans
 import time 
 import matplotlib.pyplot as plt 
@@ -38,8 +39,51 @@ class TestRBF(unittest.TestCase):
         # plt.scatter(X,T)
         # plt.plot(Xp,Tp, c = 'y')
         # plt.show()
-        epsilon = 0.001
+        epsilon = 0.005
         self.assertTrue(error < noise + epsilon)
+
+    def test_sin_redundancy(self):
+        n = 1000
+        X1 = np.random.rand(n).reshape(-1,1)
+        X2 = np.random.rand(n).reshape(-1,1) # redundant dimension
+        X = np.concatenate([X1, X2], axis = 1)
+        noise = 0.05
+        T = 0.5*np.sin(4*np.pi*X1) + 0.5 + np.random.normal(size = n, scale = noise).reshape(-1,1)
+        # get centers 
+        n_centers = 150
+        kmeans = KMeans(n_clusters = n_centers)
+        kmeans.fit(X)
+        centers = kmeans.cluster_centers_
+        # rbf train 
+        rbf = RBF(centers, activation='gaussian', sigma = 0.3)
+        rbf.train(X,T)
+        # predict
+        Tp = rbf.predict(X)
+        error = RMSE(Tp, T)
+        # Xp1 = np.linspace(0,1,1000).reshape(-1,1)
+        # Xp2 = np.random.rand(1000).reshape(-1,1) # random 2nd co-ordinate 
+        # Xp = np.concatenate([Xp1,Xp2], axis = 1)
+        # Tp = rbf.predict(Xp)
+        # plt.scatter(X1,T)
+        # plt.plot(Xp1.reshape(-1,1) ,Tp, c = 'y')
+        # plt.show()
+        epsilon = 0.01
+        self.assertTrue(error < noise + epsilon)
+    
+    def test_XOR(self):
+
+        X = np.array([[0, 0],
+                      [0, 1],
+                      [1, 0],
+                      [1, 1]])
+        T = np.array([[0],
+                      [1],
+                      [1],
+                      [0]])
+        rbf = RBF(centers = X) # centers are data itself 
+        rbf.train(X, T)
+        prediction = rbf.predict(X)
+        self.assertTrue(np.all( (prediction > 0.5) == T))
 
 
 class TestMLP(unittest.TestCase):

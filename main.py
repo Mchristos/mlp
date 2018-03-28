@@ -17,7 +17,7 @@ def RMSE(yp, y):
 
 def dotherbfthings():
     D = pd.read_csv('data178586.csv', header = None)
-    X = D.loc[:,[2,4,5,6,9]]
+    X = D.loc[:,[2,4,5,6,8]]
     X = np.array((X - X.mean())/X.std())
     # X = X.reshape(-1,1)
 
@@ -27,18 +27,17 @@ def dotherbfthings():
     y = np.array((y - ymean)/ystd)
 
     # hyperparameters    
-    n_pca_components = 1
-    n_centers = 9
+    n_pca_components = X.shape[1]
+    n_centers = 50
     activation = 'gaussian'
-    activation_sigma = 0.1
+    activation_sigma = 0.3
 
     ## pca 
-    # pca = PCA(n_components=n_pca_components)    
-    # X = pca.fit_transform(X)
-    # print("components: \n %r" % pca.components_) 
-    # print("explained variance: \n %r " % pca.explained_variance_)
-    # print("covariance \n %r" % pca.get_covariance())
-
+    pca = PCA(n_components=n_pca_components)    
+    X = pca.fit_transform(X)
+    cumsum = np.cumsum(pca.explained_variance_ratio_)
+    cutoff = np.where(cumsum > 0.9)[0][0]
+    X = X[:,:cutoff]
     ## ica 
     # ica = FastICA(n_components=5)
     # X = ica.fit_transform(X)
@@ -48,7 +47,7 @@ def dotherbfthings():
     kmeans = KMeans(n_clusters = n_centers)
     kmeans.fit(X)
     centers = kmeans.cluster_centers_
-    print("centers = \n %r" % centers)
+    # print("centers = \n %r" % centers)
 
     # train RBF 
     rbf = RBF(centers, activation=activation, sigma=activation_sigma)
