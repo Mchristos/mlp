@@ -116,7 +116,6 @@ class MLP():
         if(np.isnan(V_).any()):
             raise RuntimeError("nan values encountered")
         return V_, W_
-    
 
     def _error(self, Y, T):
         """ compute error """

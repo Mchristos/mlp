@@ -53,9 +53,3 @@ class RBF():
         result = np.dot(Phi, self.w)
         return result
 
-    def serialize(self, path):
-        selfobj = {}
-        selfobj['weights'] = self.w.tolist()
-        selfobj['centers'] = self.c.tolist()
-        with open(path, 'w') as f:
-            f.write(json.dumps(selfobj))
