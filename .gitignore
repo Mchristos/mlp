@@ -3,6 +3,8 @@
 *.pkl 
 .vscode/
 *.ipynb
+*.json
+
 
 
 # Byte-compiled / optimized / DLL files
