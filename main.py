@@ -9,6 +9,9 @@ import json
 from sklearn.externals import joblib
 import time
 from sklearn.model_selection import train_test_split, RandomizedSearchCV, cross_val_score
+import warnings
+from pprint import pprint
+warnings.filterwarnings("ignore")
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -117,6 +120,7 @@ def trainandtestwheel():
         print("")
 
 def grid_search():
+    # pre-process 
     D = pd.read_csv('data178586.csv', header = None)
     X = np.array(D.loc[:,[4,6,8]])
     y = np.array(D.loc[:,10]) 
@@ -126,36 +130,32 @@ def grid_search():
     ymean = y.mean()
     ystd = y.std()
     y = (y - ymean)/ystd
+    # pca 
+    pca = PCA(n_components=3)
+    X = pca.fit_transform(X)
+    print(pca.explained_variance_ratio_)
+
+    # cross-validation / grid search 
     rbf = RBF(n_centers = -1, activation='gaussian', sigma=-1)
-    c_range = [int(x) for x in np.linspace(800,1000,50)]
-    sig_range = np.linspace(0.4,0.6,50)
+    c_range = [1450]
+    sig_range = [0.5]
     param_grid = dict(n_centers = c_range, sigma = sig_range)
-    def scoring_func(estimator, X, y):
-        return estimator.error(X,y)
-    grid = RandomizedSearchCV(rbf, param_grid, n_iter=300, cv=3, n_jobs=-1, 
-                                               scoring=scoring_func, refit=False)
+    grid = RandomizedSearchCV(rbf, param_grid, n_iter=1, cv=3, n_jobs=-1, refit=False)
     grid.fit(X,y)
+
     # save results 
     scores = grid.grid_scores_
-    with open('cv_results.json','w') as f:
-        f.write(json.dumps(grid.cv_results_, cls=NumpyEncoder))
-    with open('cv_results.txt','w') as f:
-        for tpl in scores:
-             f.write(str(tpl) + "\n")
+    print(scores)
+    # with open('cv_results.json','w') as f:
+    #     f.write(json.dumps(grid.cv_results_, cls=NumpyEncoder))
+    # with open('cv_results.txt','w') as f:
+    #     for tpl in scores:
+    #          f.write(str(tpl) + "\n")
 
 
 if __name__ == '__main__':
 
-    with open("cv_results.json",'r') as f:
-        cv_results = json.load(f)
-    
-    n_centers = np.array(cv_results['param_n_centers'])
-    sigma = np.array(cv_results['param_sigma'])
-    scores = np.array(cv_results['mean_test_score'])
-    x,y = np.meshgrid(n_centers, sigma)
-    plt.pcolor(x,y, scores)
-    # plt.scatter(n_centers, sigma)
-    plt.show()
+    grid_search()
     # D = pd.read_csv('data178586.csv', header = None)
     # Dtrain, Dtest = train_test_split(D, test_size = 0.333333333333333333333)
     # rbf_train(Dtrain)

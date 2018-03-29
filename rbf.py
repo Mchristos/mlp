@@ -9,8 +9,9 @@ import json
 class RBF():
     """
     Implements Radial Basis Function (RBF) network. 
+    Uses KMeans clustering to compute centers if none are given. 
     """
-    def __init__(self, n_centers, activation = 'gaussian', sigma = 1):
+    def __init__(self, n_centers = 8, activation = 'gaussian', sigma = 1, centers = None):
         """
         n_centers = number of centers 
         activation = RBF activation function (can be gaussian, linear)  
@@ -19,6 +20,7 @@ class RBF():
         self.activation = activation
         if activation == 'gaussian':
             self.sigma = sigma 
+        self.centers = centers
         
     def fit(self, X, y):
         """
@@ -27,10 +29,11 @@ class RBF():
         X = data 
         y = labels
         """
-        # compute centers using kmeans 
-        kmeans = KMeans(n_clusters = self.n_centers)
-        kmeans.fit(X)
-        self.centers = kmeans.cluster_centers_
+        # compute centers using kmeans
+        if self.centers is None:
+            kmeans = KMeans(n_clusters = self.n_centers)
+            kmeans.fit(X)
+            self.centers = kmeans.cluster_centers_
         # compute distances 
         D = cdist(X, self.centers)
         # activation 
@@ -61,13 +64,13 @@ class RBF():
 
     def score(self, X, y):
         yp = self.predict(X)
-        return self._MSE(y,yp)
+        return self._RMSE(y,yp)
 
-    def _MSE(self,y, yp):
+    def _RMSE(self,y, yp):
         """
         Computes the root mean squared error (RMSE)
         """
-        return sum((yp-y)**2)/y.shape[0] 
+        return np.sqrt(np.sum((yp-y)**2)/y.shape[0])  
     
     # compatibility with sklearn 
     def get_params(self, deep = False):
@@ -78,10 +81,11 @@ class RBF():
         }
         return result
     
-    def set_params(self, n_centers, activation = 'gaussian', sigma = 1.):
+    def set_params(self, n_centers, activation = 'gaussian', sigma = 1., centers = None):
         self.n_centers = n_centers
         self.activation = activation
         self.sigma = sigma
+        self.centers = centers
         return self
 
 
