@@ -11,7 +11,8 @@ class RBF():
     Implements Radial Basis Function (RBF) network. 
     Uses KMeans clustering to compute centers if none are given. 
     """
-    def __init__(self, n_centers = 8, activation = 'gaussian', sigma = 1, centers = None):
+    def __init__(self, n_centers = 8, activation = 'gaussian', sigma = 1, centers = None, 
+        regularize = False, lambdaReg = 1.):
         """
         n_centers = number of centers 
         activation = RBF activation function (can be gaussian, linear)  
@@ -21,6 +22,8 @@ class RBF():
         if activation == 'gaussian':
             self.sigma = sigma 
         self.centers = centers
+        self.regularize = regularize
+        self.lambdaReg = lambdaReg
         
     def fit(self, X, y):
         """
@@ -42,7 +45,10 @@ class RBF():
         if self.activation == 'linear':
             Phi = D
         # compute weight vector by invertion 
-        self.w = np.dot(pinv(Phi), y)
+        if self.regularize:
+            self.w = np.inv(Phi.T@Phi + self.lambdaReg*np.eye(Phi.shape[0]))@Phi.T@y
+        else:
+            self.w = np.dot(pinv(Phi), y)
         return self.w
         
     def predict(self, X):

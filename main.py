@@ -135,17 +135,33 @@ def grid_search():
     X = pca.fit_transform(X)
     print(pca.explained_variance_ratio_)
 
-    # cross-validation / grid search 
-    rbf = RBF(n_centers = -1, activation='gaussian', sigma=-1)
-    c_range = [1450]
-    sig_range = [0.5]
-    param_grid = dict(n_centers = c_range, sigma = sig_range)
-    grid = RandomizedSearchCV(rbf, param_grid, n_iter=1, cv=3, n_jobs=-1, refit=False)
-    grid.fit(X,y)
+    # cross-validation / grid search
+
+    # RBF 
+    # rbf = RBF(n_centers = -1, activation='gaussian', sigma=-1)
+    # c_range = [1450]
+    # sig_range = [0.5]
+    # param_grid = dict(n_centers = c_range, sigma = sig_range)
+    # grid = RandomizedSearchCV(rbf, param_grid, n_iter=1, cv=3, n_jobs=-1, refit=False)
+    # grid.fit(X,y)
+
+    # MLP 
+    mlp = MLP([3,500,1],0.01,epochs=500)
+    ymax = np.max(y)
+    ymin = np.min(y)
+    y = (y - ymin)/(ymax-ymin)
+    Xtrain, Xtest, ytrain, ytest = train_test_split(X, y)
+    mlp.fit(Xtrain, ytrain.reshape(-1,1))
+    plt.plot(mlp.error)
+    plt.show()
+    testscore = mlp.score(Xtest, ytest)
+    print(testscore)
+    
+
 
     # save results 
-    scores = grid.grid_scores_
-    print(scores)
+    # scores = grid.grid_scores_
+    # print(scores)
     # with open('cv_results.json','w') as f:
     #     f.write(json.dumps(grid.cv_results_, cls=NumpyEncoder))
     # with open('cv_results.txt','w') as f:

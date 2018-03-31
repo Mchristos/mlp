@@ -8,7 +8,7 @@ import time
 import matplotlib.pyplot as plt 
 
 
-threshold = 0.0000001 # small value for testing equality 
+threshold = 0.0001 # small value for testing equality 
 def RMSE(Y, T):
     """ Root Mean Squared Error """
     return np.sqrt(np.sum((Y - T)**2)/len(Y))
@@ -24,7 +24,7 @@ class TestRBF(unittest.TestCase):
     def test_sin(self):
         n = 10000
         X = np.random.rand(n).reshape(-1,1)
-        noise = 0.5
+        noise = 0.3
         T = 0.5*np.sin(4*np.pi*X) + 0.5 + np.random.normal(size = n, scale = noise).reshape(-1,1)
         rbf = RBF(n_centers=20, activation='gaussian', sigma = 0.05)
         rbf.fit(X,T)
@@ -87,7 +87,7 @@ class TestMLP(unittest.TestCase):
         print("%s: %.3f" % (self.id(), t))
 
     def test_basic(self):
-        mlp = MLP(dims=[2,2,2], eta = 0.1, activation='linear', epochs=1)
+        mlp = MLP(dims=[2,2,2], eta = 0.1, activation='linear', max_epochs=1)
         X = np.array([[0,1.]])
         T = np.array([[1.,0]])
         V = np.array([[1,-2, 1], 
@@ -101,7 +101,7 @@ class TestMLP(unittest.TestCase):
         self.assertTrue(np.all(delta < threshold))
 
     def test_XOR(self):
-        mlp = MLP(dims =[2, 5, 1], eta = 0.1, activation = 'sigmoid', epochs=9000)
+        mlp = MLP(dims =[2, 5, 1], eta = 0.1, activation = 'sigmoid', max_epochs=9000)
         X = np.array([[0, 0],
                       [0, 1],
                       [1, 0],
@@ -115,26 +115,32 @@ class TestMLP(unittest.TestCase):
         self.assertTrue(np.all( (prediction > 0.5) == T))
     
     def test_linear(self):
-        mlp = MLP([1, 5, 1], eta = 0.01, activation='linear', epochs=1000)
+        mlp = MLP([1, 5, 1], eta = 0.01, activation='linear', max_epochs=1000)
         X = np.linspace(-1,1,10).reshape(-1,1)
         T = np.linspace(6,7,10).reshape(-1,1)
-        mlp.fit(X, T)        
+        mlp.fit(X, T)
         Tp = mlp.predict(X)
-        self.assertTrue( np.all((Tp - T)<threshold) )
+        self.assertTrue(np.allclose(T, Tp))
     
     def test_sin(self):
-        mlp = MLP([1, 5, 1], eta = 0.1, activation='sigmoid', epochs=40000)
-        n = 100
+        mlp = MLP([1, 5, 1], eta = 0.001, activation='sigmoid', max_epochs=30000, deltaE = 1e-12)
+        n = 1000
         X = np.random.rand(n).reshape(-1,1)
         noise = 0.05
-        T = 0.5*np.sin(2*np.pi*X) + 0.5 + np.random.normal(size = n, scale = noise).reshape(-1,1)
+        T = 0.3*np.sin(2*np.pi*X) + 0.5 + np.random.normal(size = n, scale = noise).reshape(-1,1)
         mlp.fit(X, T)
-        # Xp = np.linspace(0,1,1000).reshape(-1,1)
-        # Yp = mlp.predict(Xp)
-        # plt.plot(Xp,Yp)
-        # plt.scatter(X,T)
+        Xp = np.linspace(0,1,1000).reshape(-1,1)
+        Yp = mlp.predict(Xp)
+        # plt.figure(1)
+        # plt.plot(mlp.error)
         # plt.show()
-        self.assertTrue(mlp.error[-1] < noise + 0.02)
+        # plt.figure(2)
+        # plt.scatter(X,T)
+        # plt.plot(Xp,Yp, c = 'y') 
+        # plt.show()
+        self.assertLess(mlp.error[-1], noise + 0.15*noise)
 
 if __name__ == '__main__':
+    # test = TestMLP()
+    # test.test_basic()
     unittest.main()     
