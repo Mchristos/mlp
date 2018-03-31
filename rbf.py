@@ -2,7 +2,7 @@ import numpy as np
 from scipy.stats import norm
 from scipy.spatial.distance import cdist
 from sklearn.cluster import KMeans
-from numpy.linalg import pinv
+from numpy.linalg import pinv, inv
 import json
 
 
@@ -46,7 +46,8 @@ class RBF():
             Phi = D
         # compute weight vector by invertion 
         if self.regularize:
-            self.w = np.inv(Phi.T@Phi + self.lambdaReg*np.eye(Phi.shape[0]))@Phi.T@y
+            lambdaEye = self.lambdaReg*np.eye(Phi.shape[1])
+            self.w = inv(Phi.T@Phi + lambdaEye)@(Phi.T@y)
         else:
             self.w = np.dot(pinv(Phi), y)
         return self.w

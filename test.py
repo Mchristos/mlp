@@ -38,6 +38,27 @@ class TestRBF(unittest.TestCase):
         epsilon = 0.005
         self.assertTrue(error < noise + epsilon)
 
+    def test_reg(self):
+        # sinusoidal function 
+        def f(x):
+            return 0.5*np.sin(4*np.pi*x) + 0.5
+        # train on data noisily following f 
+        n = 80
+        X = np.random.rand(n).reshape(-1,1)
+        noise = 0.05
+        T = f(X) + np.random.normal(size = n, scale = noise).reshape(-1,1)
+        rbf = RBF(n_centers=20, activation='gaussian', sigma = 0.05, regularize=True, lambdaReg=20.)
+        rbf.fit(X,T)
+        xl = np.linspace(0,1,1000).reshape(-1,1)
+        yl = rbf.predict(xl)
+        # plt.scatter(X, T)    # training data 
+        # plt.plot(xl, f(xl))  # true curve 
+        # plt.plot(xl,yl)      # learned curve 
+        # plt.show()
+        epsilon = 0.005
+        true_error = RMSE(yl, f(xl))  
+        self.assertLess(true_error, noise + epsilon)
+
     def test_sin_redundancy(self):
         n = 1000
         X1 = np.random.rand(n).reshape(-1,1)
