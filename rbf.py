@@ -11,20 +11,33 @@ class RBF():
     Implements Radial Basis Function (RBF) network. 
     Uses KMeans clustering to compute centers if none are given. 
     """
-    def __init__(self, n_centers = 8, activation = 'gaussian', sigma = 1, centers = None, 
-        regularize = False, lambdaReg = 1.):
+    def __init__(self, n_centers = 8, activation = 'gaussian', sigma = 1, centers = None, lambdaReg = 0.):
         """
         n_centers = number of centers 
         activation = RBF activation function (can be gaussian, linear)  
         """
+        self.set_params(n_centers, activation, sigma, centers, lambdaReg)
+        
+    # compatibility with sklearn 
+    def set_params(self, n_centers = 8, activation = 'gaussian', sigma = 1, centers = None, lambdaReg = 0.):
         self.n_centers = n_centers
         self.activation = activation
         if activation == 'gaussian':
             self.sigma = sigma 
         self.centers = centers
-        self.regularize = regularize
         self.lambdaReg = lambdaReg
-        
+        return self
+
+    def get_params(self, deep = False):
+        result = {
+            'n_centers'  : self.n_centers,
+            'activation' : self.activation,
+            'sigma'      : self.sigma,
+            'centers'    : self.centers,
+            'lambdaReg'  : self.lambdaReg
+        }
+        return result
+
     def fit(self, X, y):
         """
         Train RBF network on labelled data.
@@ -45,11 +58,8 @@ class RBF():
         if self.activation == 'linear':
             Phi = D
         # compute weight vector by invertion 
-        if self.regularize:
-            lambdaEye = self.lambdaReg*np.eye(Phi.shape[1])
-            self.w = inv(Phi.T@Phi + lambdaEye)@(Phi.T@y)
-        else:
-            self.w = np.dot(pinv(Phi), y)
+        lambdaEye = self.lambdaReg*np.eye(Phi.shape[1])
+        self.w = inv(Phi.T@Phi + lambdaEye)@(Phi.T@y) # reduces to inv(Phi)@y when lambda = 0 
         return self.w
         
     def predict(self, X):
@@ -79,21 +89,7 @@ class RBF():
         """
         return np.sqrt(np.sum((yp-y)**2)/y.shape[0])  
     
-    # compatibility with sklearn 
-    def get_params(self, deep = False):
-        result = {
-            'n_centers'  : self.n_centers,
-            'activation' : self.activation,
-            'sigma'      : self.sigma
-        }
-        return result
     
-    def set_params(self, n_centers, activation = 'gaussian', sigma = 1., centers = None):
-        self.n_centers = n_centers
-        self.activation = activation
-        self.sigma = sigma
-        self.centers = centers
-        return self
 
 
 

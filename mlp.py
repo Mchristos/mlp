@@ -136,6 +136,3 @@ class MLP():
         
     def __repr__(self):
         return "in:%i, hidden:%i out:%i " % self.dims
-    
-    
-

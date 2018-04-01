@@ -47,7 +47,7 @@ class TestRBF(unittest.TestCase):
         X = np.random.rand(n).reshape(-1,1)
         noise = 0.05
         T = f(X) + np.random.normal(size = n, scale = noise).reshape(-1,1)
-        rbf = RBF(n_centers=20, activation='gaussian', sigma = 0.05, regularize=True, lambdaReg=20.)
+        rbf = RBF(n_centers=20, activation='gaussian', sigma = 0.05, lambdaReg=20.)
         rbf.fit(X,T)
         xl = np.linspace(0,1,1000).reshape(-1,1)
         yl = rbf.predict(xl)
@@ -55,7 +55,7 @@ class TestRBF(unittest.TestCase):
         # plt.plot(xl, f(xl))  # true curve 
         # plt.plot(xl,yl)      # learned curve 
         # plt.show()
-        epsilon = 0.005
+        epsilon = 0.01
         true_error = RMSE(yl, f(xl))  
         self.assertLess(true_error, noise + epsilon)
 
@@ -67,7 +67,7 @@ class TestRBF(unittest.TestCase):
         noise = 0.05
         T = 0.5*np.sin(4*np.pi*X1) + 0.5 + np.random.normal(size = n, scale = noise).reshape(-1,1)
         # rbf train 
-        rbf = RBF(n_centers=150, activation='gaussian', sigma = 0.3)
+        rbf = RBF(n_centers=150, activation='gaussian', sigma = 0.3, lambdaReg=1e-6)
         rbf.fit(X,T)
         # predict
         Tp = rbf.predict(X)
@@ -144,14 +144,14 @@ class TestMLP(unittest.TestCase):
         self.assertTrue(np.allclose(T, Tp))
     
     def test_sin(self):
-        mlp = MLP([1, 5, 1], eta = 0.001, activation='sigmoid', max_epochs=30000, deltaE = 1e-12)
+        mlp = MLP([1, 7, 1], eta = 0.01, activation='sigmoid', max_epochs=20000, deltaE = -1)
         n = 1000
         X = np.random.rand(n).reshape(-1,1)
         noise = 0.05
-        T = 0.3*np.sin(2*np.pi*X) + 0.5 + np.random.normal(size = n, scale = noise).reshape(-1,1)
+        T = 0.5 + 0.3*np.sin(2*np.pi*X) + np.random.normal(size = n, scale = noise).reshape(-1,1)
         mlp.fit(X, T)
-        Xp = np.linspace(0,1,1000).reshape(-1,1)
-        Yp = mlp.predict(Xp)
+        # Xp = np.linspace(0,1,1000).reshape(-1,1)
+        # Yp = mlp.predict(Xp)
         # plt.figure(1)
         # plt.plot(mlp.error)
         # plt.show()
@@ -162,6 +162,6 @@ class TestMLP(unittest.TestCase):
         self.assertLess(mlp.error[-1], noise + 0.15*noise)
 
 if __name__ == '__main__':
-    # test = TestMLP()
-    # test.test_basic()
+    # test = TestRBF()
+    # test.test_sin_redundancy()
     unittest.main()     
