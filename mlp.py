@@ -19,21 +19,26 @@ class MLP():
     """
     Implements multi-layer perceptron 
     """
-    def __init__(self, dims, eta, activation = 'sigmoid', max_epochs = 10000, deltaE = 1e-12):
+    def __init__(self, dims, eta, activation = 'sigmoid', max_epochs = 10000, deltaE = 1e-15, alpha = 0.8):
         """
         dims = [dim_in, dim_hidden1, ..., dim_hiddenN, dim_out]
         eta = leraning rate 
         activation = activation function
+        max_epochs = maximum number of epochs during training
+        deltaE = stopping criterion
+        alpha = momentum parameter 
         """
-        self.set_params(dims,eta,activation,max_epochs, deltaE)
+        self.set_params(dims,eta,activation,max_epochs, deltaE, alpha)
 
     # compatibility with sklearn 
-    def set_params(self, dims, eta, activation = 'sigmoid', max_epochs = 10000, deltaE = 1e-12):
+    def set_params(self, dims, eta, activation = 'sigmoid', max_epochs = 10000, deltaE = 1e-15, alpha = 0.8):
         self.dims = dims 
         self.eta = eta
         self.max_epochs = max_epochs
         self.activation = activation
         self.deltaE = deltaE
+        self.alpha = alpha
+        self.dW = [] # momentum terms
         if activation == 'sigmoid':
             self.f = SIG
             self.f_prime = dSIG
@@ -59,8 +64,12 @@ class MLP():
             weights = []
             for i in range(len(self.dims)-1):
                 W = np.random.rand(self.dims[i+1], self.dims[i] +1)
-                #                  ^ output dim    ^ input dim plus bias dim 
+                #                  ^ output dim    ^ input dim plus bias dim
+                W = (W.T/np.sum(W, axis=1)).T # normalize ROWS for mid-range output
                 weights.append(W)
+        # initial momentum terms 
+        for W in weights:
+            self.dW.append(np.zeros(W.shape))
         # store error values 
         self.error = np.zeros(self.max_epochs+1)
         self.error[-1] = np.infty
@@ -130,8 +139,12 @@ class MLP():
         # update weights 
         weights_new = []
         for i in range(len(weights)):
-            temp = self.eta*(delta[i].T @ x[i])
-            weights_new.append(weights[i] - temp)
+            W = weights[i]
+            momentum = self.alpha*self.dW[i]
+            learningTerm = self.eta*(delta[i].T @ x[i]) 
+            Wnew = W - learningTerm + momentum
+            self.dW[i] = Wnew - W
+            weights_new.append(Wnew)
         return weights_new
         
     def __repr__(self):
