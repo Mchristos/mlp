@@ -50,13 +50,13 @@ class MLP():
         self.dW = [] # momentum terms
         if activation == 'sigmoid':
             self.f = SIG
-            self.f_prime = dSIG
+            self.df = dSIG
         elif activation == 'linear':
             self.f = lambda x : x
-            self.f_prime = lambda x : 1
+            self.df = lambda x : 1
         elif activation == 'relu':
             self.f = ReLU
-            self.f_prime = dReLU
+            self.df = dReLU
         else:
             raise ValueError("invalid activation function %r" % activation)
 
@@ -151,12 +151,12 @@ class MLP():
         u = activations at each output layer during forward pass 
         """
         # backward pass
-        D = -self.f_prime(u[-1])*(y - Y) # Delta 
+        D = -self.df(u[-1])*(y - Y) # Delta 
         delta = [D]
         for i in range(len(weights) -1):
             W = weights[::-1][i]   # go through weight matrices in reverse
             U = u[::-1][i+1] # go through outputs in reverse, from second last
-            d = self.f_prime(U)*(delta[i]@W)[:,1:]
+            d = self.df(U)*(delta[i]@W)[:,1:]
             delta.append(d)
         delta.reverse() # reverse delta!  
         # update weights 
