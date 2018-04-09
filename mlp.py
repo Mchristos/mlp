@@ -6,7 +6,13 @@ def SIG(x):
 def dSIG(x):
     """ derivative of sigmoid """
     return np.exp(-x)/(1 + np.exp(-x))**2
-
+def ReLU(x):
+    """ rectifier function """
+    result = x*(x > 0)
+    return result
+def dReLU(x):
+    """ derivative of rectifier """
+    return 1.*(x>0)
 def addOnesCol(X):
     """ add column of ones """
     a, b = X.shape
@@ -19,32 +25,41 @@ class MLP():
     """
     Implements multi-layer perceptron 
     """
-    def __init__(self, dims, eta, activation = 'sigmoid', max_epochs = 10000, deltaE = 1e-15, alpha = 0.8):
+    def __init__(self, dims = [1,2,4,1], eta = 0.001, activation = 'sigmoid', stochastic = 0.,
+                         max_epochs = 10000, deltaE = -np.inf, alpha = 0.8):
         """
         dims = [dim_in, dim_hidden1, ..., dim_hiddenN, dim_out]
         eta = leraning rate 
         activation = activation function
+        stochastic = fraction of training data to use in each epoch 
         max_epochs = maximum number of epochs during training
         deltaE = stopping criterion
         alpha = momentum parameter 
         """
-        self.set_params(dims,eta,activation,max_epochs, deltaE, alpha)
+        self.set_params(dims, eta, activation, stochastic, max_epochs, deltaE, alpha)
 
     # compatibility with sklearn 
-    def set_params(self, dims, eta, activation = 'sigmoid', max_epochs = 10000, deltaE = 1e-15, alpha = 0.8):
+    def set_params(self, dims, eta, activation, stochastic, max_epochs, deltaE, alpha):
         self.dims = dims 
         self.eta = eta
-        self.max_epochs = max_epochs
         self.activation = activation
+        self.stochastic = stochastic
+        self.max_epochs = max_epochs
         self.deltaE = deltaE
         self.alpha = alpha
         self.dW = [] # momentum terms
         if activation == 'sigmoid':
             self.f = SIG
             self.f_prime = dSIG
-        if activation == 'linear':
+        elif activation == 'linear':
             self.f = lambda x : x
             self.f_prime = lambda x : 1
+        elif activation == 'relu':
+            self.f = ReLU
+            self.f_prime = dReLU
+        else:
+            raise ValueError("invalid activation function %r" % activation)
+
         return self
 
     def get_params(self, deep = False):
@@ -76,21 +91,25 @@ class MLP():
         # main training loop
         t = 0 
         while (t < self.max_epochs):
-            # shuffle data 
-            p = np.random.permutation(X.shape[0])
-            X = X[p,:]
-            y = y[p]
+            # shuffle data
+            Xs = X
+            ys = y
+            if self.stochastic:
+                cut = int(self.stochastic*X.shape[0])
+                p = np.random.permutation(X.shape[0])[:cut]
+                Xs = X[p,:]
+                ys = y[p]
             # forward pass 
-            Y, x, u = self._forwardpass(X, weights)
+            Y, x, u = self._forwardpass(Xs, weights)
             # compute error 
-            error = self._RMSE(Y, y)
+            error = self._RMSE(Y, ys)
             self.error[t] = error
             delta = self.error[t-1] - self.error[t] 
             if delta < self.deltaE:
                 break
             else:
             # backward pass 
-                weights = self._backwardpass(y, Y, x, u, weights)
+                weights = self._backwardpass(ys, Y, x, u, weights)
                 t = t + 1
         self.error = self.error[:t]
         self.weights = weights
@@ -120,7 +139,7 @@ class MLP():
             x.append(X)             # save input 
             U = (weights[i]@X.T).T  # apply weight matrix
             u.append(U)             # save output
-            Y = self.f(U)           # activated output  
+            Y = self.f(U)           # activated output
         return Y , x, u
 
     def _backwardpass(self, y, Y, x, u, weights):
