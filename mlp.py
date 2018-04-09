@@ -58,7 +58,7 @@ class MLP():
 
     def fit(self, X, y, computeError = False, weights = None):
         if X.shape[0] != y.shape[0]:
-            raise ValueError("incorrect shape")
+            raise ValueError("training and target shapes don't match")
         # random initial weights
         if weights is None:
             weights = []
@@ -76,6 +76,10 @@ class MLP():
         # main training loop
         t = 0 
         while (t < self.max_epochs):
+            # shuffle data 
+            p = np.random.permutation(X.shape[0])
+            X = X[p,:]
+            y = y[p]
             # forward pass 
             Y, x, u = self._forwardpass(X, weights)
             # compute error 

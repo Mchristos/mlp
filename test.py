@@ -135,16 +135,22 @@ class TestMLP(unittest.TestCase):
         prediction = mlp.predict(X)
         self.assertTrue(np.all( (prediction > 0.5) == T))
     
-    def test_linear(self):
+    def test_linear_overfit(self):
         mlp = MLP([1, 5, 1], eta = 0.01, activation='linear', max_epochs=1000, alpha=0.)
         X = np.linspace(-1,1,10).reshape(-1,1)
         T = np.linspace(6,7,10).reshape(-1,1)
         mlp.fit(X, T)
         Tp = mlp.predict(X)
+        # plt.figure(1)
+        # plt.plot(mlp.error)
+        # plt.figure(2)
+        # plt.scatter(X,T)
+        # plt.plot(X,Tp, c = 'y') 
+        # plt.show()
         self.assertTrue(np.allclose(T, Tp))
     
     def test_sin(self):
-        mlp = MLP([1, 7, 1], eta = 0.003, activation='sigmoid', max_epochs=5000, deltaE = -1, alpha=0.9)
+        mlp = MLP([1, 4, 1], eta = 0.002, activation='sigmoid', max_epochs=5000, deltaE = -1, alpha=0.92)
         n = 1000
         X = np.random.rand(n).reshape(-1,1)
         noise = 0.05
