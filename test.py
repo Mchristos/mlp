@@ -150,21 +150,27 @@ class TestMLP(unittest.TestCase):
         self.assertTrue(np.allclose(T, Tp))
     
     def test_sin(self):
-        mlp = MLP([1, 4,2, 1], eta = 0.01, activation='sigmoid', stochastic = 0.8, max_epochs=5000, alpha=0.9)
-        n = 1000
-        X = np.random.rand(n).reshape(-1,1)
+        mlp = MLP([1,4,2,1], eta = 0.01, activation='sigmoid', stochastic = 0., max_epochs=50000, alpha=0.9, deltaE = 5e-9)
+        n = 100
         noise = 0.05
-        T = 0.5 + 0.3*np.sin(2*np.pi*X) + np.random.normal(size = n, scale = noise).reshape(-1,1)
-        mlp.fit(X, T)
-        Xp = np.linspace(0,1,1000).reshape(-1,1)
-        Yp = mlp.predict(Xp)
+        def f(x):
+            return 0.5 + 0.3*np.sin(2*np.pi*x) + np.random.normal(size = n, scale = noise).reshape(-1,1)
+        Xtrain = np.random.rand(n).reshape(-1,1)
+        ytrain = f(Xtrain)
+        Xtest  = np.random.rand(n).reshape(-1,1)
+        ytest  = f(Xtest)
+        mlp.fit(Xtrain, ytrain, Xtest, ytest)
+        # Xp = np.linspace(0,1,1000).reshape(-1,1)
+        # Yp = mlp.predict(Xp)
         # plt.figure(1)
-        # plt.plot(mlp.error)
+        # plt.plot(mlp.train_error)
+        # plt.plot(mlp.test_error)
         # plt.figure(2)
-        # plt.scatter(X,T)
-        # plt.plot(Xp,Yp, c = 'y') 
+        # plt.scatter(Xtrain,ytrain)
+        # plt.scatter(Xtest, ytest)
+        # plt.plot(Xp,Yp, c = 'b') 
         # plt.show()
-        self.assertLess(mlp.error[-1], noise + 0.1*noise)
+        self.assertLess(mlp.train_error[-1], noise + 0.1*noise)
 
 if __name__ == '__main__':
     # test = TestMLP()

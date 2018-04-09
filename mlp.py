@@ -31,7 +31,7 @@ class MLP():
         dims = [dim_in, dim_hidden1, ..., dim_hiddenN, dim_out]
         eta = leraning rate 
         activation = activation function
-        stochastic = fraction of training data to use in each epoch 
+        stochastic = fraction of randomly shuffled training data to use in each epoch. If zero, not stochastic. 
         max_epochs = maximum number of epochs during training
         deltaE = stopping criterion
         alpha = momentum parameter 
@@ -71,23 +71,26 @@ class MLP():
         }
         return result
 
-    def fit(self, X, y, computeError = False, weights = None):
+    def fit(self, X, y, Xtest = None, ytest = None, weights = None):
         if X.shape[0] != y.shape[0]:
             raise ValueError("training and target shapes don't match")
         # random initial weights
-        if weights is None:
-            weights = []
+        self.weights = weights
+        if self.weights is None:
+            self.weights = []
             for i in range(len(self.dims)-1):
                 W = np.random.rand(self.dims[i+1], self.dims[i] +1)
                 #                  ^ output dim    ^ input dim plus bias dim
                 W = (W.T/np.sum(W, axis=1)).T # normalize ROWS for mid-range output
-                weights.append(W)
+                self.weights.append(W)
         # initial momentum terms 
-        for W in weights:
+        for W in self.weights:
             self.dW.append(np.zeros(W.shape))
         # store error values 
-        self.error = np.zeros(self.max_epochs+1)
-        self.error[-1] = np.infty
+        self.train_error = np.zeros(self.max_epochs+1)
+        self.test_error =  np.zeros(self.max_epochs+1)
+        self.train_error[-1] = np.infty
+        self.test_error[-1] = np.infty
         # main training loop
         t = 0 
         while (t < self.max_epochs):
@@ -100,20 +103,26 @@ class MLP():
                 Xs = X[p,:]
                 ys = y[p]
             # forward pass 
-            Y, x, u = self._forwardpass(Xs, weights)
+            Y, x, u = self._forwardpass(Xs, self.weights)
             # compute error 
-            error = self._RMSE(Y, ys)
-            self.error[t] = error
-            delta = self.error[t-1] - self.error[t] 
-            if delta < self.deltaE:
+            rmse = self._RMSE(Y, ys)
+            self.train_error[t] = rmse
+            if Xtest is not None:
+                rmse = self.score(Xtest, ytest)
+                self.test_error[t] = rmse
+                delta = self.test_error[t] - self.test_error[t-1] 
+            else:
+                delta = self.train_error[t] - self.train_error[t-1]                
+            if abs(delta) < self.deltaE:
                 break
             else:
             # backward pass 
-                weights = self._backwardpass(ys, Y, x, u, weights)
+                self.weights = self._backwardpass(ys, Y, x, u, self.weights)
                 t = t + 1
-        self.error = self.error[:t]
-        self.weights = weights
-        return weights
+        self.train_error = self.train_error[:t]
+        self.test_error = self.test_error[:t]
+        # self.weights = weights
+        return self.weights
    
     def predict(self, X):
         Y, _, __ = self._forwardpass(X, self.weights)
