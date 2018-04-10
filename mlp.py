@@ -13,6 +13,10 @@ def ReLU(x):
 def dReLU(x):
     """ derivative of rectifier """
     return 1.*(x>0)
+def TANH(x):
+    return np.tanh(x)
+def dTANH(x):
+    return 1 - np.tanh(x)**2
 def addOnesCol(X):
     """ add column of ones """
     a, b = X.shape
@@ -57,6 +61,9 @@ class MLP():
         elif activation == 'relu':
             self.f = ReLU
             self.df = dReLU
+        elif activation == 'tanh':
+            self.f = TANH
+            self.df = dTANH
         else:
             raise ValueError("invalid activation function %r" % activation)
 
@@ -74,14 +81,14 @@ class MLP():
     def fit(self, X, y, Xtest = None, ytest = None, weights = None):
         if X.shape[0] != y.shape[0]:
             raise ValueError("training and target shapes don't match")
-        # random initial weights
+        # initialize weights
         self.weights = weights
         if self.weights is None:
             self.weights = []
             for i in range(len(self.dims)-1):
-                W = np.random.rand(self.dims[i+1], self.dims[i] +1)
+                W = np.random.rand(self.dims[i+1], self.dims[i] +1) - 0.5
                 #                  ^ output dim    ^ input dim plus bias dim
-                W = (W.T/np.sum(W, axis=1)).T # normalize ROWS for mid-range output
+                # W = (W.T/np.sum(W, axis=1)).T # normalize ROWS for mid-range output
                 self.weights.append(W)
         # initial momentum terms 
         for W in self.weights:

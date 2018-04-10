@@ -149,12 +149,37 @@ class TestMLP(unittest.TestCase):
         # plt.show()
         self.assertTrue(np.allclose(T, Tp))
     
-    def test_sin(self):
-        mlp = MLP([1,4,2,1], eta = 0.01, activation='sigmoid', stochastic = 0., max_epochs=50000, alpha=0.9, deltaE = 5e-9)
+    def test_sin_sig(self):
+        """ noisy sin curve using sigmoid activation """
+        mlp = MLP([1,4,2,1], eta = 0.01, activation='sigmoid', stochastic = 0., max_epochs=30000, alpha=0.9, deltaE = 1e-8)
         n = 100
         noise = 0.05
         def f(x):
             return 0.5 + 0.3*np.sin(2*np.pi*x) + np.random.normal(size = n, scale = noise).reshape(-1,1)
+        Xtrain = np.random.rand(n).reshape(-1,1)
+        ytrain = f(Xtrain)
+        Xtest  = np.random.rand(n).reshape(-1,1)
+        ytest  = f(Xtest)
+        mlp.fit(Xtrain, ytrain, Xtest, ytest)
+        Xp = np.linspace(0,1,1000).reshape(-1,1)
+        Yp = mlp.predict(Xp)
+        # plt.figure(1)
+        # plt.plot(mlp.train_error)
+        # plt.plot(mlp.test_error)
+        # plt.figure(2)
+        # plt.scatter(Xtrain,ytrain)
+        # plt.scatter(Xtest, ytest)
+        # plt.plot(Xp,Yp, c = 'b') 
+        # plt.show()
+        self.assertLess(mlp.train_error[-1], noise + 0.1*noise)
+
+    def test_sin_tanh(self):
+        """ noisy sin curve using tanh activation """
+        mlp = MLP([1,4,2,1], eta = 0.001, activation='tanh', stochastic = 0., max_epochs=30000, alpha=0.8, deltaE = 1e-7)
+        n = 100
+        noise = 0.05
+        def f(x):
+            return 0.5*np.sin(2*np.pi*x) + np.random.normal(size = n, scale = noise).reshape(-1,1)
         Xtrain = np.random.rand(n).reshape(-1,1)
         ytrain = f(Xtrain)
         Xtest  = np.random.rand(n).reshape(-1,1)
