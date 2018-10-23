@@ -132,6 +132,22 @@ class TestMLP(unittest.TestCase):
                       [1],
                       [0]])
         mlp.fit(X, T)
+        ## VISUALISATION ##
+        X = np.linspace(-0.5, 1.5, 100)
+        Y = np.linspace(-0.5, 1.5, 100)
+        X, Y = np.meshgrid(X, Y)
+        def F(x,y):
+            return mlp.predict(np.array([[x,y]]))
+        Z = np.vectorize(F)(X,Y)
+        plt.pcolor(X,Y,Z, cmap='RdBu')
+        plt.colorbar()
+        cntr = plt.contour(X,Y,Z, levels = [0.5])
+        plt.clabel(cntr, inline=1, fontsize=10)
+        plt.scatter([0,1], [0,1], s = 500, c = 'r')
+        plt.scatter([1,0], [0,1], s = 500, marker = 'v')
+        plt.grid()
+        plt.show()
+        ###################
         prediction = mlp.predict(X)
         self.assertTrue(np.all( (prediction > 0.5) == T))
     
@@ -199,5 +215,5 @@ class TestMLP(unittest.TestCase):
 
 if __name__ == '__main__':
     # test = TestMLP()
-    # test.test_sin()
+    # test.test_XOR()
     unittest.main()     
