@@ -1,4 +1,5 @@
-# ml-fundamentals
+# Machine Learning Fundamentals 
+## first-principles implementations of foundational algoriths 
 
 Simple, readable implementations of MLP (multi-layer perceptron) and RBF (radial basis function) networks. 
 
