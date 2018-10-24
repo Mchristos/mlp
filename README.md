@@ -1,4 +1,4 @@
-# neural-nets
+# ml-fundamentals
 
 Simple, readable implementations of MLP (multi-layer perceptron) and RBF (radial basis function) networks. 
 
