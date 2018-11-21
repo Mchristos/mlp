@@ -5,6 +5,8 @@ Simple, readable implementations of MLP (multi-layer perceptron) and RBF (radial
 
 Interested in understanding the foundations of machine learning? Then implement the fundamental algorithms from first principles. Most implementations of machine learning algorithms are written for efficiency. It's hard to find clear, well-commented code that implements them. This repo aims for simplicity and readability, exposing how these algorithms can be implemented on a conceptual level.
 
+These implementations of MLP (i.e. neural network) and RBF have no fancy dependencies - only NumPy is required. 
+
 ## Multi-Layer Perceptron (MLP) 
 An implementation of an MLP regressor (/classifier) implementing the sklearn api's like fit(), predict(), score() etc. Includes the following features: 
 
