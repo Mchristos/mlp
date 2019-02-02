@@ -1,18 +1,10 @@
-# Machine Learning Fundamentals 
-#### First-principles implementations of foundational algorithms
+# Multi-Layer Perceptron (MLP) 
 
-Simple, readable implementations of MLP (multi-layer perceptron) and RBF (radial basis function) networks. 
+A python implementation of MLP which aims for simplicity and readability as opposed to efficiency. This implementation should expose how the algorithm works to someone unfamiliar with it. The api is in the style of [scikit-learn](https://github.com/scikit-learn), using the functions fit(), predict(), score() etc. The following features are implemented: 
 
-Interested in understanding the foundations of machine learning? Then implement the fundamental algorithms from first principles. Most implementations of machine learning algorithms are written for efficiency. It's hard to find clear, well-commented code that implements them. This repo aims for simplicity and readability, exposing how these algorithms can be implemented on a conceptual level.
-
-These implementations of MLP (i.e. neural network) and RBF have no fancy dependencies - only NumPy is required. 
-
-## Multi-Layer Perceptron (MLP) 
-An implementation of an MLP regressor (/classifier) implementing the sklearn api's like fit(), predict(), score() etc. Includes the following features: 
-
-- Backpropogation 
+- Backpropogation
 - Mini-batch gradient descent 
-- Momentum 
+- Momentum
 - Arbitrary number of hidden layers
 - Random shuffling
 - ReLU, Tanh, and Sigmoid activation functions.
@@ -45,12 +37,3 @@ An implementation of an MLP regressor (/classifier) implementing the sklearn api
         plt.show()
 
 <img src="https://user-images.githubusercontent.com/13951953/47428181-608b4a00-d78a-11e8-9cc8-28fd0795e749.png" alt="drawing" width="500px"/>
-
-
-## Radial Basis Function (RBF) 
-A simple implementation for a simple algorithm. 
-
-- Regularisation 
-- Automatically compute centers using KMeans clustering
-
-Inspired by scikit-learn: each class implements the sklearn api (e.g fit(), predict(), score() etc). 
