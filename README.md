@@ -1,6 +1,8 @@
-# Multi-Layer Perceptron (MLP) 
+# First Principles Neural Network 
 
-A python implementation of MLP which aims for simplicity and readability as opposed to efficiency. This implementation should expose how the algorithm works to someone unfamiliar with it. The api is in the style of [scikit-learn](https://github.com/scikit-learn), using the functions fit(), predict(), score() etc. The following features are implemented: 
+A first-principles implementation of a trainable multi-layer perceptron (MLP) written using only numpy. The purpose of this repo is to understand the maths behind neural networks, and training using backpropogation. It is not intended as a tool for training models in practice. 
+
+I aimed for maximum simplicity and readability, as opposed to efficiency or practicality. This implementation should expose how the algorithm works to someone unfamiliar with it. The api is in the style of [scikit-learn](https://github.com/scikit-learn), using the functions fit(), predict(), score() etc. The following features are implemented: 
 
 - Backpropogation
 - Mini-batch gradient descent 
